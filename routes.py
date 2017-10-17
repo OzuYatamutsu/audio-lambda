@@ -9,7 +9,7 @@ IS_PAUSED = True
 MUSIC_FILE = '/var/ambient_audio/Matthew S Burns - Patience.mp3'
 
 @base_routes.route('/toggle')
-def toggle() -> None:
+def toggle() -> tuple:
     global IS_PAUSED
     _init_audio_stream()
 
@@ -25,6 +25,7 @@ def toggle() -> None:
         # Music is paused, resume
         music.unpause()
         IS_PAUSED = False
+    return '', 204
 
 def _init_audio_stream():
     global MUSIC_FILE
