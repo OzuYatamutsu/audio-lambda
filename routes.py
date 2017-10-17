@@ -17,7 +17,7 @@ def toggle() -> tuple:
         # Music is playing, pause it
         music.pause()
         IS_PAUSED = True
-    elif IS_PAUSED and music.get_busy == 0:
+    elif IS_PAUSED and not music.get_busy():
         # We haven't started playing anything
         music.play(-1)
         IS_PAUSED = False
