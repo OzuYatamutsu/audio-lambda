@@ -1,30 +1,18 @@
 from flask import Blueprint
-from pygame import init
-from pygame.mixer import music
+from config import PASSPHRASE
 
 
 # Register routes with webapp.py
 base_routes = Blueprint('base_routes', __name__)
 IS_PAUSED = True
-MUSIC_FILE = '/var/ambient_audio/Matthew S Burns - Patience.mp3'
+MUSIC_FILE = 
 
-@base_routes.route('/toggle')
+@base_routes.route('/toggle', method=['POST'])
 def toggle() -> tuple:
-    global IS_PAUSED
-    _init_audio_stream()
-
-    if not IS_PAUSED:
-        # Music is playing, pause it
-        music.pause()
-        IS_PAUSED = True
-    elif IS_PAUSED and not music.get_busy():
-        # We haven't started playing anything
-        music.play(-1)
-        IS_PAUSED = False
-    else:
-        # Music is paused, resume
-        music.unpause()
-        IS_PAUSED = False
+    if 'passphrase' not in request.json or request.json['passphrase'] != PASSPHRASE:
+        return '', 403
+    
+    toggle_controller()
     return '', 204
 
 def _init_audio_stream():
