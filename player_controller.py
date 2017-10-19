@@ -34,7 +34,10 @@ def _init_audio_stream():
     music.set_volume(VOLUME)
 
     # Get music files in dir
-    music_files = [music_file for music_file in listdir(MUSIC_DIR) if music_file.endswith('.mp3')]
+    music_files = [
+        '{}{}{}'.format(MUSIC_DIR, sep, music_file)
+        for music_file in listdir(MUSIC_DIR) if music_file.endswith('.mp3')
+    ]
     shuffle(music_files)
 
     if len(music_files) == 0:
