@@ -43,7 +43,7 @@ def play_next():
     global CURRENT_POS
 
     CURRENT_POS = (CURRENT_POS + 1) % len(AUDIO_LIBRARY)
-    print("Now playing {} at position {}.".format(_get_current_song(), CURRENT_POS)
+    print("Now playing {} at position {}.".format(_get_current_song(), CURRENT_POS))
     music.load(_get_current_song())
     music.play()
 
