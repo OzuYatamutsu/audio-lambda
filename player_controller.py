@@ -48,7 +48,7 @@ def schedule_next():
     global _NEXT_EVENT
 
     play_next()
-    _NEXT_EVENT = Timer(_get_length_of_mp3(_get_current_song(), play_next)
+    _NEXT_EVENT = Timer(_get_length_of_mp3(_get_current_song(), play_next))
     _NEXT_EVENT.start()
 
 def _init_audio_stream():
