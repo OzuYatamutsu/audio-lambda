@@ -1,6 +1,7 @@
 from os import listdir, sep
 from threading import Timer
 from random import shuffle
+from datetime import timedelta
 from pygame import init
 from pygame.mixer import music
 from mutagen.mp3 import MP3
@@ -27,6 +28,11 @@ def toggle_controller():
 
         # Cancel the scheduled thread
         _NEXT_EVENT.cancel()
+
+        print("Audio {} was paused ({}% played).".format( 
+            _get_current_song(),
+            str((music.get_pos() / _get_) * 100)
+        )
     elif IS_PAUSED:
         # Music is paused, resume
         music.unpause()
@@ -34,13 +40,23 @@ def toggle_controller():
 
         # Resume the scheduled thread
         _resume_scheduler_for_current()
+    
+        print("Audio {} was resumed ({}% played).".format( 
+            _get_current_song(),
+            str((music.get_pos() / _get_) * 100)
+        )
 
 def play_next():
     global AUDIO_LIBRARY
     global CURRENT_POS
 
     CURRENT_POS = (CURRENT_POS + 1) % len(AUDIO_LIBRARY)
-    print("Now playing {} at position {}.".format(_get_current_song(), CURRENT_POS))
+    print("Now playing {} ({}) - audio file {} of {}.".format(
+        _get_current_song(),
+        str(timedelta(seconds=_get_length_of_mp3(_get_current_song()))),
+        CURRENT_POS + 1,
+        len(AUDIO_LIBRARY)
+    ))
     music.load(_get_current_song())
     music.play()
 
