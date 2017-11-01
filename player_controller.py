@@ -2,7 +2,7 @@ from os import listdir, sep
 from threading import Timer
 from random import shuffle
 from datetime import timedelta
-from pygame import init
+from pygame import init, quit
 from pygame.mixer import music
 from mutagen.mp3 import MP3
 from config import MUSIC_DIR, VOLUME
@@ -11,12 +11,13 @@ AUDIO_STREAM_INITED = False
 AUDIO_LIBRARY = []
 CURRENT_POS = -1
 _NEXT_EVENT = None
-
+PAUSED_POSITION = -1
 
 def toggle_controller():
     global IS_PAUSED
     global AUDIO_STREAM_INITED
     global _NEXT_EVENT
+    global PAUSED_POSITION
 
     if not AUDIO_STREAM_INITED:
         _init_audio_stream()
@@ -24,7 +25,8 @@ def toggle_controller():
         IS_PAUSED = False
     elif not IS_PAUSED:
         # Music is playing, pause it
-        music.pause()
+        # Save position, then stop to avoid white noise
+        PAUSED_POSITION = music.get_pos()
         IS_PAUSED = True
 
         # Cancel the scheduled thread
@@ -32,11 +34,21 @@ def toggle_controller():
 
         print("Audio {} was paused ({}% played).".format( 
             _get_current_song(),
-            str(round(((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100), 2)
+            str(_get_percent_played_for_current())
         ))
+
+        music.stop()
+        quit()
+
     elif IS_PAUSED:
         # Music is paused, resume
-        music.unpause()
+        init()
+        music.set_volume(VOLUME)
+        music.load(_get_current_song())
+        music.play(start=PAUSED_POSITION)
+        if (_get_percent_played_for_current() < 0.5):
+            print("Something went wrong when trying to resume - playing next song instead.")
+            play_next()
         IS_PAUSED = False
 
         # Resume the scheduled thread
@@ -44,7 +56,7 @@ def toggle_controller():
     
         print("Audio {} was resumed ({}% played).".format( 
             _get_current_song(),
-            str(round(((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100), 2)
+            str(_get_percent_played_for_current())
         ))
 
 def play_next():
@@ -105,4 +117,10 @@ def _resume_scheduler_for_current():
         schedule_next
     )
     _NEXT_EVENT.start()
+
+def _get_percent_played_for_current() -> float:
+    return round(
+        ((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100,
+        2  # decimal places
+    )
 
