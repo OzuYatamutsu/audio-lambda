@@ -21,6 +21,7 @@ def toggle_controller():
     if not AUDIO_STREAM_INITED:
         _init_audio_stream()
         AUDIO_STREAM_INITED = True
+        IS_PAUSED = False
     elif not IS_PAUSED:
         # Music is playing, pause it
         music.pause()
@@ -31,8 +32,8 @@ def toggle_controller():
 
         print("Audio {} was paused ({}% played).".format( 
             _get_current_song(),
-            str((music.get_pos() / _get_) * 100)
-        )
+            str(round(((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100), 2)
+        ))
     elif IS_PAUSED:
         # Music is paused, resume
         music.unpause()
@@ -43,8 +44,8 @@ def toggle_controller():
     
         print("Audio {} was resumed ({}% played).".format( 
             _get_current_song(),
-            str((music.get_pos() / _get_) * 100)
-        )
+            str(round(((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100), 2)
+        ))
 
 def play_next():
     global AUDIO_LIBRARY
