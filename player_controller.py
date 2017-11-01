@@ -1,6 +1,5 @@
 from os import listdir, sep
-from time import time, sleep
-from sched import scheduler
+from threading import Timer
 from random import shuffle
 from pygame import init
 from pygame.mixer import music
@@ -10,14 +9,12 @@ IS_PAUSED = True
 AUDIO_STREAM_INITED = False
 AUDIO_LIBRARY = []
 CURRENT_POS = -1
-AUDIO_SCHEDULER = scheduler(time, sleep)
 _NEXT_EVENT = None
 
 
 def toggle_controller():
     global IS_PAUSED
     global AUDIO_STREAM_INITED
-    global AUDIO_SCHEDULER
     global _NEXT_EVENT
 
     if not AUDIO_STREAM_INITED:
@@ -28,14 +25,14 @@ def toggle_controller():
         music.pause()
         IS_PAUSED = True
 
-        # Cancel the scheduler
-        AUDIO_SCHEDULER.cancel(_NEXT_EVENT)
+        # Cancel the scheduled thread
+        _NEXT_EVENT.cancel()
     elif IS_PAUSED:
         # Music is paused, resume
         music.unpause()
         IS_PAUSED = False
 
-        # Resume the scheduler
+        # Resume the scheduled thread
         _resume_scheduler_for_current()
 
 def play_next():
@@ -48,17 +45,14 @@ def play_next():
     music.play()
 
 def schedule_next():
-    global AUDIO_SCHEDULER
     global _NEXT_EVENT
 
     play_next()
-    _NEXT_EVENT = AUDIO_SCHEDULER.enter(_get_length_of_mp3(_get_current_song()), 1, play_next)
-    AUDIO_SCHEDULER.run()
+    _NEXT_EVENT = Timer(_get_length_of_mp3(_get_current_song(), play_next)
+    _NEXT_EVENT.start()
 
 def _init_audio_stream():
     global AUDIO_LIBRARY
-    global CURRENT_POS
-    global AUDIO_SCHEDULER
 
     init()
     music.set_volume(VOLUME)
@@ -86,13 +80,12 @@ def _get_current_song():
     return AUDIO_LIBRARY[CURRENT_POS]
 
 def _resume_scheduler_for_current():
-    global AUDIO_SCHEDULER
     global _NEXT_EVENT
 
     current_pos = music.get_pos() / 1000  # get_pos returns milliseconds
-    _NEXT_EVENT = AUDIO_SCHEDULER.enter(
+    _NEXT_EVENT = Timer(
         _get_length_of_mp3(_get_current_song()) - current_pos,
-        1, schedule_next
+        schedule_next
     )
-    AUDIO_SCHEDULER.run()
+    _NEXT_EVENT.start()
 
