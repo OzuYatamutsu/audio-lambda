@@ -6,58 +6,29 @@ from pygame import init, quit
 from pygame.mixer import music
 from mutagen.mp3 import MP3
 from config import MUSIC_DIR, VOLUME
-IS_PAUSED = True
-AUDIO_STREAM_INITED = False
+IS_STOPPED = False
 AUDIO_LIBRARY = []
 CURRENT_POS = -1
 _NEXT_EVENT = None
-PAUSED_POSITION = -1
 
 def toggle_controller():
-    global IS_PAUSED
-    global AUDIO_STREAM_INITED
+    global IS_STOPPED
     global _NEXT_EVENT
-    global PAUSED_POSITION
 
-    if not AUDIO_STREAM_INITED:
+    if IS_STOPPED:
         _init_audio_stream()
-        AUDIO_STREAM_INITED = True
-        IS_PAUSED = False
-    elif not IS_PAUSED:
-        # Music is playing, pause it
-        # Save position, then stop to avoid white noise
-        PAUSED_POSITION = music.get_pos()
-        IS_PAUSED = True
-
-        # Cancel the scheduled thread
-        _NEXT_EVENT.cancel()
-
-        print("Audio {} was paused ({}% played).".format( 
-            _get_current_song(),
-            str(_get_percent_played_for_current())
-        ))
-
+        IS_STOPPED = False
+    else:
+        # Music is playing, stop it
         music.stop()
         quit()
 
-    elif IS_PAUSED:
-        # Music is paused, resume
-        init()
-        music.set_volume(VOLUME)
-        music.load(_get_current_song())
-        music.play(start=PAUSED_POSITION)
-        if (_get_percent_played_for_current() < 0.5):
-            print("Something went wrong when trying to resume - playing next song instead.")
-            play_next()
-        IS_PAUSED = False
+        # Cancel the scheduled thread for the next song
+        _NEXT_EVENT.cancel()
 
-        # Resume the scheduled thread
-        _resume_scheduler_for_current()
-    
-        print("Audio {} was resumed ({}% played).".format( 
-            _get_current_song(),
-            str(_get_percent_played_for_current())
-        ))
+        IS_STOPPED = True
+        print("Audio {} was stopped.".format(_get_current_song()))
+
 
 def play_next():
     global AUDIO_LIBRARY
@@ -107,20 +78,4 @@ def _get_current_song():
     global CURRENT_POS
 
     return AUDIO_LIBRARY[CURRENT_POS]
-
-def _resume_scheduler_for_current():
-    global _NEXT_EVENT
-
-    current_pos = music.get_pos() / 1000  # get_pos returns milliseconds
-    _NEXT_EVENT = Timer(
-        _get_length_of_mp3(_get_current_song()) - current_pos,
-        schedule_next
-    )
-    _NEXT_EVENT.start()
-
-def _get_percent_played_for_current() -> float:
-    return round(
-        ((music.get_pos() / 1000) / _get_length_of_mp3(_get_current_song())) * 100,
-        2  # decimal places
-    )
 
