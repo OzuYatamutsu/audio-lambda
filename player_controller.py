@@ -6,7 +6,7 @@ from pygame import init, quit
 from pygame.mixer import music
 from mutagen.mp3 import MP3
 from config import MUSIC_DIR, VOLUME
-IS_STOPPED = False
+IS_STOPPED = True
 AUDIO_LIBRARY = []
 CURRENT_POS = -1
 _NEXT_EVENT = None
